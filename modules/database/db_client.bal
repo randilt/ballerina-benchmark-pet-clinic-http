@@ -39,8 +39,7 @@ public class DbClient {
             CREATE TABLE IF NOT EXISTS vet (
                 id INTEGER AUTO_INCREMENT PRIMARY KEY,
                 first_name VARCHAR(30) NOT NULL,
-                last_name VARCHAR(30) NOT NULL,
-                specialty VARCHAR(80) NOT NULL
+                last_name VARCHAR(30) NOT NULL             
             )
         `);
 
@@ -60,6 +59,16 @@ public class DbClient {
             CREATE TABLE IF NOT EXISTS specialty (
                 id INTEGER AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(80) NOT NULL
+            )
+        `);
+
+        _ = check self.dbClient->execute(`
+            CREATE TABLE IF NOT EXISTS vet_specialty (
+                vet_id INTEGER NOT NULL,
+                specialty_id INTEGER NOT NULL,
+                PRIMARY KEY (vet_id, specialty_id),
+                FOREIGN KEY (vet_id) REFERENCES vet(id) ON DELETE CASCADE,
+                FOREIGN KEY (specialty_id) REFERENCES specialty(id) ON DELETE CASCADE
             )
         `);
 
