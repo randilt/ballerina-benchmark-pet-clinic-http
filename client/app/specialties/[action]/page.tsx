@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +28,8 @@ export default function SpecialtyForm({
   params: { action: string };
 }) {
   const router = useRouter();
+  const resolvedParams = use(params as any);
+  const action = (resolvedParams as { action: string }).action;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,14 +43,14 @@ export default function SpecialtyForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      if (params.action === "new") {
+      if (action === "new") {
         await createSpecialty(values);
         toast({
           title: "Specialty created successfully",
           description: "The new specialty has been added to the system.",
         });
-      } else if (params.action === "edit") {
-        await updateSpecialty(Number.parseInt(params.action), values);
+      } else if (action === "edit") {
+        await updateSpecialty(Number.parseInt(action), values);
         toast({
           title: "Specialty updated successfully",
           description: "The specialty information has been updated.",
@@ -69,7 +71,7 @@ export default function SpecialtyForm({
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">
-        {params.action === "new" ? "Add New Specialty" : "Edit Specialty"}
+        {action === "new" ? "Add New Specialty" : "Edit Specialty"}
       </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,6 +35,8 @@ const formSchema = z.object({
 
 export default function VetForm({ params }: { params: { action: string } }) {
   const router = useRouter();
+  const resolvedParams = use(params as any);
+  const action = (resolvedParams as { action: string }).action;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [specialties, setSpecialties] = useState([]);
@@ -64,14 +66,14 @@ export default function VetForm({ params }: { params: { action: string } }) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      if (params.action === "new") {
+      if (action === "new") {
         await createVet(values);
         toast({
           title: "Veterinarian created successfully",
           description: "The new veterinarian has been added to the system.",
         });
-      } else if (params.action === "edit") {
-        await updateVet(Number.parseInt(params.action), values);
+      } else if (action === "edit") {
+        await updateVet(Number.parseInt(action), values);
         toast({
           title: "Veterinarian updated successfully",
           description: "The veterinarian information has been updated.",
@@ -92,7 +94,7 @@ export default function VetForm({ params }: { params: { action: string } }) {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">
-        {params.action === "new" ? "Add New Veterinarian" : "Edit Veterinarian"}
+        {action === "new" ? "Add New Veterinarian" : "Edit Veterinarian"}
       </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

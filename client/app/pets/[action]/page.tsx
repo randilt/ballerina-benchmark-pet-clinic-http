@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +29,8 @@ const formSchema = z.object({
 
 export default function PetForm({ params }: { params: { action: string } }) {
   const router = useRouter();
+  const resolvedParams = use(params as any);
+  const action = (resolvedParams as { action: string }).action;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,14 +47,14 @@ export default function PetForm({ params }: { params: { action: string } }) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      if (params.action === "new") {
+      if (action === "new") {
         await createPet(values);
         toast({
           title: "Pet created successfully",
           description: "The new pet has been added to the system.",
         });
-      } else if (params.action === "edit") {
-        await updatePet(Number.parseInt(params.action), values);
+      } else if (action === "edit") {
+        await updatePet(Number.parseInt(action), values);
         toast({
           title: "Pet updated successfully",
           description: "The pet information has been updated.",
@@ -73,7 +75,7 @@ export default function PetForm({ params }: { params: { action: string } }) {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">
-        {params.action === "new" ? "Add New Pet" : "Edit Pet"}
+        {action === "new" ? "Add New Pet" : "Edit Pet"}
       </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
