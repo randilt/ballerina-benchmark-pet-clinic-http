@@ -36,6 +36,23 @@ public class AppointmentRepository {
         return result;
     }
 
+    public function update(int id, types:Appointment appointment) returns types:Appointment|error {
+        sql:ExecutionResult result = check self.dbClient->execute(`
+        UPDATE appointment 
+        SET pet_id = ${appointment.petId},
+            vet_id = ${appointment.vetId},
+            appointment_datetime = ${appointment.dateTime},
+            status = ${appointment.status},
+            notes = ${appointment.notes}
+        WHERE id = ${id}
+    `);
+        if result.affectedRowCount == 0 {
+            return error("Appointment not found");
+        }
+        appointment.id = id;
+        return appointment;
+    }
+
     public function getUpcomingByVetId(int vetId, time:Civil fromDate) returns types:Appointment[]|error {
         stream<types:Appointment, sql:Error?> appointmentStream = self.dbClient->query(`
             SELECT 

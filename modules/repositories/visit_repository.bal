@@ -19,6 +19,31 @@ public class VisitRepository {
         return visit;
     }
 
+    public function update(int id, types:Visit visit) returns types:Visit|error {
+        sql:ExecutionResult result = check self.dbClient->execute(`
+        UPDATE visit 
+        SET pet_id = ${visit.petId},
+            vet_id = ${visit.vetId},
+            visit_date = ${visit.visitDate},
+            description = ${visit.description}
+        WHERE id = ${id}
+    `);
+        if result.affectedRowCount == 0 {
+            return error("Visit not found");
+        }
+        visit.id = id;
+        return visit;
+    }
+
+    public function delete(int id) returns error? {
+        sql:ExecutionResult result = check self.dbClient->execute(`
+        DELETE FROM visit WHERE id = ${id}
+    `);
+        if result.affectedRowCount == 0 {
+            return error("Visit not found");
+        }
+    }
+
     public function getById(int id) returns types:Visit|error {
         types:Visit|error result = self.dbClient->queryRow(`
             SELECT 
