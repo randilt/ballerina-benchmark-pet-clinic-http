@@ -55,6 +55,26 @@ public class DbClient {
                 FOREIGN KEY (vet_id) REFERENCES vet(id) ON DELETE CASCADE
             )
         `);
+
+        _ = check self.dbClient->execute(`
+            CREATE TABLE IF NOT EXISTS specialty (
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(80) NOT NULL
+            )
+        `);
+
+        _ = check self.dbClient->execute(`
+            CREATE TABLE IF NOT EXISTS appointment (
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                visit_id INTEGER NOT NULL,
+                vet_id INTEGER NOT NULL,
+                appointment_date DATE NOT NULL,
+                status VARCHAR(20) NOT NULL,
+                notes VARCHAR(255),
+                FOREIGN KEY (visit_id) REFERENCES visit(id) ON DELETE CASCADE,
+                FOREIGN KEY (vet_id) REFERENCES vet(id) ON DELETE CASCADE
+            )
+        `);
     }
 
     public function getClient() returns jdbc:Client {
