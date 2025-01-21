@@ -21,7 +21,7 @@ public type Vet record {|
     int? id = ();
     string firstName;
     string lastName;
-    string specialty;
+    Specialty[] specialties;
 |};
 
 public type Visit record {|
@@ -30,6 +30,20 @@ public type Visit record {|
     int vetId;
     string visitDate;
     string description;
+|};
+
+public type Appointment record {|
+    int? id = ();
+    int petId;
+    int vetId;
+    string dateTime;
+    string status;
+    string notes;
+|};
+
+public type Specialty record {|
+    int? id = ();
+    string name;
 |};
 
 public type ErrorResponse record {|
