@@ -10,7 +10,14 @@ configurable string dbUser = "sa";
 configurable string dbPassword = "";
 configurable int port = 8080;
 
-service / on new http:Listener(port) {
+service / on new http:Listener(port, {
+    cors: {
+        allowOrigins: ["*"],
+        allowCredentials: true,
+        allowHeaders: ["*"],
+        allowMethods: ["*"]
+    }
+}) {
     private final db:DbClient dbClient;
     private final repos:OwnerRepository ownerRepo;
     private final repos:PetRepository petRepo;
@@ -66,6 +73,10 @@ service / on new http:Listener(port) {
     // pet endpoints
     resource function post pets(@http:Payload types:Pet payload) returns types:Pet|error {
         return self.petRepo.create(payload);
+    }
+
+    resource function get pets() returns types:Pet[]|error {
+        return self.petRepo.getAll();
     }
 
     resource function get pets/[int id]() returns types:Pet|http:NotFound|error {

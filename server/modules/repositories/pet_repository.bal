@@ -57,6 +57,20 @@ public class PetRepository {
         return result;
     }
 
+    public function getAll() returns types:Pet[]|error {
+        stream<types:Pet, sql:Error?> petStream = self.dbClient->query(`SELECT 
+            id,
+            name,
+            species,
+            owner_id as ownerId,
+            birth_date as birthDate
+        FROM pet`);
+        types:Pet[] pets = check from types:Pet pet in petStream
+            select pet;
+        check petStream.close();
+        return pets;
+    }
+
     public function getByOwnerId(int ownerId) returns types:Pet[]|error {
         stream<types:Pet, sql:Error?> petStream = self.dbClient->query(`
             SELECT 
