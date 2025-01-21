@@ -43,7 +43,7 @@ public type Appointment record {|
 
 public type Specialty record {|
     int? id = ();
-    string name;
+    string? name;
 |};
 
 public type ErrorResponse record {|

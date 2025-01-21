@@ -23,7 +23,14 @@ import { Specialty } from "@/types";
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  specialties: z.array(z.number()).min(1, "At least one specialty is required"),
+  specialties: z
+    .array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+      })
+    )
+    .min(1, "At least one specialty is required"),
 });
 
 export default function VetForm({ params }: { params: { action: string } }) {
@@ -130,10 +137,17 @@ export default function VetForm({ params }: { params: { action: string } }) {
                         options={specialties}
                         {...field}
                         onChange={(val: any) =>
-                          field.onChange(val.map((v: any) => v.value))
+                          field.onChange(
+                            val.map((v: any) => ({
+                              id: v.value,
+                              name: v.label,
+                            }))
+                          )
                         }
                         selected={specialties.filter((option: any) =>
-                          field.value.includes(option.value)
+                          field.value.some(
+                            (specialty: any) => specialty.id === option.value
+                          )
                         )}
                       />
                     )}
