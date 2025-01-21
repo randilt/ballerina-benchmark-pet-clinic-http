@@ -10,14 +10,17 @@ configurable string dbUser = "sa";
 configurable string dbPassword = "";
 configurable int port = 8080;
 
-service / on new http:Listener(port, {
+@http:ServiceConfig {
     cors: {
-        allowOrigins: ["*"],
-        allowCredentials: true,
-        allowHeaders: ["*"],
-        allowMethods: ["*"]
+        allowOrigins: ["http://localhost:3000"],
+        allowCredentials: false,
+        allowHeaders: ["CORELATION_ID", "Content-Type", "Authorization"],  // Added common headers
+        allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        exposeHeaders: ["X-CUSTOM-HEADER"],
+        maxAge: 84900
     }
-}) {
+}
+service / on new http:Listener(port) {
     private final db:DbClient dbClient;
     private final repos:OwnerRepository ownerRepo;
     private final repos:PetRepository petRepo;
