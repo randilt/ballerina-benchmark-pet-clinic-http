@@ -19,6 +19,31 @@ public class PetRepository {
         return pet;
     }
 
+    public function update(int id, types:Pet pet) returns types:Pet|error {
+        sql:ExecutionResult result = check self.dbClient->execute(`
+            UPDATE pet 
+            SET name = ${pet.name},
+                species = ${pet.species},
+                owner_id = ${pet.ownerId},
+                birth_date = ${pet.birthDate}
+            WHERE id = ${id}
+        `);
+        if result.affectedRowCount == 0 {
+            return error("Pet not found");
+        }
+        pet.id = id;
+        return pet;
+    }
+
+    public function delete(int id) returns error? {
+        sql:ExecutionResult result = check self.dbClient->execute(`
+            DELETE FROM pet WHERE id = ${id}
+        `);
+        if result.affectedRowCount == 0 {
+            return error("Pet not found");
+        }
+    }
+
     public function getById(int id) returns types:Pet|error {
         types:Pet|error result = self.dbClient->queryRow(`
             SELECT 

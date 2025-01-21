@@ -4,5 +4,7 @@ name = "petclinic"
 version = "0.1.0"
 distribution = "2201.10.3"
 
-[build-options]
-observabilityIncluded = true
+[[platform.java11.dependency]]
+groupId = "com.h2database"
+artifactId = "h2"
+version = "2.0.206"

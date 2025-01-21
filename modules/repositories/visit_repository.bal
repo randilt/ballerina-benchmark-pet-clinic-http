@@ -57,6 +57,23 @@ public class VisitRepository {
         return result;
     }
 
+    public function getByVetId(int vetId) returns types:Visit[]|error {
+        stream<types:Visit, sql:Error?> visitStream = self.dbClient->query(`
+            SELECT 
+                id,
+                pet_id as petId,
+                vet_id as vetId,
+                visit_date as visitDate,
+                description
+            FROM visit
+            WHERE vet_id = ${vetId}
+        `);
+        types:Visit[] visits = check from types:Visit visit in visitStream
+            select visit;
+        check visitStream.close();
+        return visits;
+    }
+
     public function getByPetId(int petId) returns types:Visit[]|error {
         stream<types:Visit, sql:Error?> visitStream = self.dbClient->query(`
             SELECT 

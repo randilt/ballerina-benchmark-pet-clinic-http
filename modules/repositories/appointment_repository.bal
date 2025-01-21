@@ -74,6 +74,24 @@ public class AppointmentRepository {
         return appointments;
     }
 
+    public function getAll() returns types:Appointment[]|error {
+        stream<types:Appointment, sql:Error?> appointmentStream = self.dbClient->query(`
+            SELECT 
+                id,
+                pet_id as petId,
+                vet_id as vetId,
+                appointment_datetime as dateTime,
+                status,
+                notes
+            FROM appointment
+            ORDER BY appointment_datetime DESC
+        `);
+        types:Appointment[] appointments = check from types:Appointment appointment in appointmentStream
+            select appointment;
+        check appointmentStream.close();
+        return appointments;
+    }
+
     public function getByPetId(int petId) returns types:Appointment[]|error {
         stream<types:Appointment, sql:Error?> appointmentStream = self.dbClient->query(`
             SELECT 
