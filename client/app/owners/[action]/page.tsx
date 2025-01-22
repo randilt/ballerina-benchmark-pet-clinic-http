@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { PageProps } from "@/types";
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),

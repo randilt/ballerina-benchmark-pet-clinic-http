@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { MultiSelect } from "@/components/ui/multi-select";
-import type { PageProps, Specialty } from "@/types";
+import type { Specialty } from "@/types";
 import {
   createVetAction,
   updateVetAction,
