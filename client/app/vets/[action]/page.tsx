@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createVet, updateVet, getSpecialties } from "@/lib/api";
+import { getSpecialties } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -18,7 +18,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { Specialty } from "@/types";
+import type { Specialty } from "@/types";
+import {
+  createVetAction,
+  updateVetAction,
+  deleteVetAction,
+  getVetAction,
+} from "../actions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -40,6 +57,16 @@ export default function VetForm({ params }: { params: { action: string } }) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [specialties, setSpecialties] = useState([]);
+  const isEditing = action !== "new";
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      specialties: [],
+    },
+  });
 
   useEffect(() => {
     const fetchSpecialties = async () => {
@@ -52,38 +79,78 @@ export default function VetForm({ params }: { params: { action: string } }) {
       );
     };
     fetchSpecialties();
-  }, []);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      specialties: [],
-    },
-  });
+    if (isEditing) {
+      const fetchVetData = async () => {
+        const result = await getVetAction(Number(action));
+        if (result.success) {
+          form.reset({
+            firstName: result.data.firstName,
+            lastName: result.data.lastName,
+            specialties: result.data.specialties,
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: result.error,
+            variant: "destructive",
+          });
+        }
+      };
+      fetchVetData();
+    }
+  }, [isEditing, action, form, toast]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      if (action === "new") {
-        await createVet(values);
+      const result = isEditing
+        ? await updateVetAction(Number(action), values)
+        : await createVetAction(values);
+
+      if (result.success) {
         toast({
-          title: "Veterinarian created successfully",
-          description: "The new veterinarian has been added to the system.",
+          title: `Veterinarian ${
+            isEditing ? "updated" : "created"
+          } successfully`,
+          description: `The veterinarian has been ${
+            isEditing ? "updated in" : "added to"
+          } the system.`,
         });
-      } else if (action === "edit") {
-        await updateVet(Number.parseInt(action), values);
-        toast({
-          title: "Veterinarian updated successfully",
-          description: "The veterinarian information has been updated.",
-        });
+        router.push("/vets");
+      } else {
+        throw new Error(result.error);
       }
-      router.push("/vets");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "An error occurred while saving the veterinarian.",
+        description:
+          error.message || "An error occurred while saving the veterinarian.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function onDelete() {
+    setIsLoading(true);
+    try {
+      const result = await deleteVetAction(Number(action));
+      if (result.success) {
+        toast({
+          title: "Veterinarian deleted successfully",
+          description: "The veterinarian has been removed from the system.",
+        });
+        router.push("/vets");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description:
+          error.message || "An error occurred while deleting the veterinarian.",
         variant: "destructive",
       });
     } finally {
@@ -94,7 +161,7 @@ export default function VetForm({ params }: { params: { action: string } }) {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">
-        {action === "new" ? "Add New Veterinarian" : "Edit Veterinarian"}
+        {isEditing ? "Edit Veterinarian" : "Add New Veterinarian"}
       </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -159,9 +226,35 @@ export default function VetForm({ params }: { params: { action: string } }) {
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Veterinarian"}
-          </Button>
+          <div className="flex justify-between">
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Veterinarian"}
+            </Button>
+            {isEditing && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={isLoading}>
+                    Delete Veterinarian
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      the veterinarian from the system.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onDelete}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </form>
       </Form>
     </div>

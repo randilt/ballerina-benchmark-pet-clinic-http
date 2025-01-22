@@ -59,6 +59,11 @@ export async function deleteVet(id: number) {
   await axios.delete(`${API_URL}/vets/${id}`);
 }
 
+export async function getVet(id: number) {
+  const response = await axios.get(`${API_URL}/vets/${id}`);
+  return response.data;
+}
+
 export async function getOwners() {
   const response = await axios.get(`${API_URL}/owners`);
   return response.data;

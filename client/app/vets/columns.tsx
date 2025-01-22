@@ -28,15 +28,10 @@ export const columns: ColumnDef<Vet>[] = [
       const vet = row.original;
 
       return (
-        <div className="flex space-x-2">
-          <Link href={`/vets/${vet.id}/edit`}>
+        <div className="flex">
+          <Link href={`/vets/${vet.id}`}>
             <Button variant="outline" size="sm">
-              Edit
-            </Button>
-          </Link>
-          <Link href={`/vets/${vet.id}/delete`}>
-            <Button variant="destructive" size="sm">
-              Delete
+              Manage Vet
             </Button>
           </Link>
         </div>
