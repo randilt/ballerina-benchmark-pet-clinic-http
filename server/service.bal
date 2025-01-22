@@ -74,8 +74,24 @@ service / on new http:Listener(port) {
     }
 
     // pet endpoints
-    resource function post pets(@http:Payload types:Pet payload) returns types:Pet|error {
-        return self.petRepo.create(payload);
+    resource function post pets(@http:Payload types:Pet payload) returns http:Response {
+        http:Response response = new;
+
+        do {
+            types:Pet result = check self.petRepo.create(payload);
+            response.statusCode = http:STATUS_CREATED;
+            response.setJsonPayload(result);
+        } on fail error e {
+            types:ErrorResponse errResp = {
+                status: self.getStatusCode(e),
+                message: e.message(),
+                details: <json>e.detail()
+            };
+            response.statusCode = errResp.status;
+            response.setJsonPayload(errResp);
+        }
+
+        return response;
     }
 
     resource function get pets() returns types:Pet[]|error {
@@ -266,4 +282,21 @@ service / on new http:Listener(port) {
     resource function get vets/[int id]/available(time:Civil dateTime) returns boolean|error {
         return self.appointmentRepo.isVetAvailable(id, dateTime);
     }
+
+    private function getStatusCode(error e) returns int {
+        if e is types:ResourceNotFoundError {
+            return http:STATUS_NOT_FOUND;
+        } else if e is types:DatabaseError {
+            return http:STATUS_INTERNAL_SERVER_ERROR;
+        } else if e is types:ValidationError {
+            return http:STATUS_BAD_REQUEST;
+        } else if e is types:TransactionError {
+            return http:STATUS_INTERNAL_SERVER_ERROR;
+        } else if e is types:RequestValidationError {
+            return http:STATUS_BAD_REQUEST;
+        } else {
+            return http:STATUS_INTERNAL_SERVER_ERROR;
+        }
+    }
+
 }

@@ -1,3 +1,4 @@
+
 public type ResourceNotFoundError distinct error<record {|
     string entity;
     int id;
@@ -22,3 +23,16 @@ public type TransactionError distinct error<record {|
     string message;
     error? cause;
 |}>;
+
+public type RequestValidationError distinct error<record {|
+    string entity;
+    string fieldname;
+    string message;
+|}>;
+
+public type ErrorResponse record {|
+    int status;
+    string message; // Changed from error? to string
+    json details?;
+|};
+

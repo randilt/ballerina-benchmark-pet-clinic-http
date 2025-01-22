@@ -1,4 +1,3 @@
-import ballerina/time;
 
 public type Owner record {|
     int? id = ();
@@ -44,11 +43,5 @@ public type Appointment record {|
 public type Specialty record {|
     int? id = ();
     string? name;
-|};
-
-public type ErrorResponse record {|
-    string message;
-    string timestamp = time:utcToString(time:utcNow());
-    int status;
 |};
 

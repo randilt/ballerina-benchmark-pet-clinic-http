@@ -5,17 +5,68 @@ import ballerinax/java.jdbc;
 
 public class PetRepository {
     private final jdbc:Client dbClient;
+    private final OwnerRepository ownerRepo;
 
     public function init(jdbc:Client dbClient) {
         self.dbClient = dbClient;
+        self.ownerRepo = new (self.dbClient);
     }
 
     public function create(types:Pet pet) returns types:Pet|error {
-        sql:ExecutionResult result = check self.dbClient->execute(`
+        // Validate required fields
+        if pet.name.trim().length() == 0 {
+            return error types:RequestValidationError("Invalid pet name",
+            entity = "pet",
+            fieldname = "name",
+            message = "Pet name cannot be empty"
+            );
+        }
+        if pet.species.trim().length() == 0 {
+            return error types:RequestValidationError("Invalid species",
+            entity = "pet",
+            fieldname = "species",
+            message = "Species cannot be empty"
+            );
+        }
+
+        // Check owner exists
+        types:Owner|error owner = self.ownerRepo.getById(pet.ownerId);
+        if owner is error {
+            return error types:ResourceNotFoundError("Owner not found",
+            entity = "owner",
+            id = pet.ownerId,
+            message = "Owner not found"
+            );
+        }
+
+        // Insert pet with transaction
+        transaction {
+            sql:ExecutionResult|sql:Error result = check self.dbClient->execute(`
             INSERT INTO pet(name, species, owner_id, birth_date)
             VALUES (${pet.name}, ${pet.species}, ${pet.ownerId}, ${pet.birthDate})
         `);
-        pet.id = <int>result.lastInsertId;
+
+            if result is sql:Error {
+                rollback;
+                return error types:DatabaseError("Database operation failed",
+                operation = "create",
+                entity = "pet",
+                message = "Failed to create pet record",
+                cause = error(result.message())
+                );
+            } else {
+                check commit;
+                pet.id = <int>result.lastInsertId;
+            }
+        } on fail error e {
+            return error types:TransactionError("Transaction failed",
+            operation = "create",
+            entity = "pet",
+            message = "Failed to complete pet creation transaction",
+            cause = e
+            );
+        }
+
         return pet;
     }
 

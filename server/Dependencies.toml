@@ -356,6 +356,7 @@ dependencies = [
 modules = [
 	{org = "petclinic", packageName = "petclinic", moduleName = "petclinic"},
 	{org = "petclinic", packageName = "petclinic", moduleName = "petclinic.database"},
+	{org = "petclinic", packageName = "petclinic", moduleName = "petclinic.errors"},
 	{org = "petclinic", packageName = "petclinic", moduleName = "petclinic.repositories"},
 	{org = "petclinic", packageName = "petclinic", moduleName = "petclinic.types"}
 ]
