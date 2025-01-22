@@ -28,7 +28,8 @@ const formSchema = z.object({
 
 export default function OwnerForm({ params }: any) {
   const router = useRouter();
-  const action = params.action as string;
+  const resolved = use(params) as any;
+  const action = resolved.action as string;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 

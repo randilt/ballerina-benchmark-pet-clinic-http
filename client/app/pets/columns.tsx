@@ -25,14 +25,9 @@ export const columns: ColumnDef<Pet>[] = [
 
       return (
         <div className="flex space-x-2">
-          <Link href={`/pets/${pet.id}/edit`}>
+          <Link href={`/pets/${pet.id}`}>
             <Button variant="outline" size="sm">
-              Edit
-            </Button>
-          </Link>
-          <Link href={`/pets/${pet.id}/delete`}>
-            <Button variant="destructive" size="sm">
-              Delete
+              Update
             </Button>
           </Link>
         </div>

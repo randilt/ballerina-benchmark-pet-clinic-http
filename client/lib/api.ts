@@ -2,6 +2,11 @@ import axios from "axios";
 
 const API_URL = "http://localhost:8080";
 
+export async function getPet(id: number) {
+  const response = await axios.get(`${API_URL}/pets/${id}`);
+  return response.data;
+}
+
 export async function getPets() {
   const response = await axios.get(`${API_URL}/pets`);
   return response.data;

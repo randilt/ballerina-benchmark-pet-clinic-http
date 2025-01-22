@@ -2,10 +2,10 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createPet, updatePet, getOwners } from "@/lib/api";
+import { getOwners } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -24,7 +24,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Owner } from "@/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import type { Owner } from "@/types";
+import {
+  createPetAction,
+  updatePetAction,
+  deletePetAction,
+  getPetAction,
+} from "../actions";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -37,18 +54,12 @@ const formSchema = z.object({
 
 export default function PetForm({ params }: any) {
   const router = useRouter();
-  const action = params.action as string;
+  const resolved = use(params) as any;
+  const action = resolved.action as string;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [owners, setOwners] = useState([]);
-
-  useEffect(() => {
-    const fetchOwners = async () => {
-      const fetchedOwners = await getOwners();
-      setOwners(fetchedOwners);
-    };
-    fetchOwners();
-  }, []);
+  const isEditing = action !== "new";
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,28 +71,83 @@ export default function PetForm({ params }: any) {
     },
   });
 
+  useEffect(() => {
+    const fetchOwners = async () => {
+      const fetchedOwners = await getOwners();
+      setOwners(fetchedOwners);
+    };
+    fetchOwners();
+
+    if (isEditing) {
+      const fetchPetData = async () => {
+        const result = await getPetAction(Number(action));
+        if (result.success) {
+          form.reset({
+            name: result.data.name,
+            species: result.data.species,
+            ownerId: result.data.ownerId.toString(),
+            birthDate: result.data.birthDate,
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: result.error,
+            variant: "destructive",
+          });
+        }
+      };
+      fetchPetData();
+    }
+  }, [isEditing, action, form, toast]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
       const petData = { ...values, ownerId: Number.parseInt(values.ownerId) };
-      if (action === "new") {
-        await createPet(petData);
+      const result = isEditing
+        ? await updatePetAction(Number(action), petData)
+        : await createPetAction(petData);
+
+      if (result.success) {
         toast({
-          title: "Pet created successfully",
-          description: "The new pet has been added to the system.",
+          title: `Pet ${isEditing ? "updated" : "created"} successfully`,
+          description: `The pet has been ${
+            isEditing ? "updated in" : "added to"
+          } the system.`,
         });
-      } else if (action === "edit") {
-        await updatePet(Number.parseInt(action), petData);
-        toast({
-          title: "Pet updated successfully",
-          description: "The pet information has been updated.",
-        });
+        router.push("/pets");
+      } else {
+        throw new Error(result.error);
       }
-      router.push("/pets");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "An error occurred while saving the pet.",
+        description: error.message || "An error occurred while saving the pet.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function onDelete() {
+    setIsLoading(true);
+    try {
+      const result = await deletePetAction(Number(action));
+      if (result.success) {
+        toast({
+          title: "Pet deleted successfully",
+          description: "The pet has been removed from the system.",
+        });
+        router.push("/pets");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description:
+          error.message || "An error occurred while deleting the pet.",
         variant: "destructive",
       });
     } finally {
@@ -92,7 +158,7 @@ export default function PetForm({ params }: any) {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">
-        {action === "new" ? "Add New Pet" : "Edit Pet"}
+        {isEditing ? "Edit Pet" : "Add New Pet"}
       </h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -128,10 +194,7 @@ export default function PetForm({ params }: any) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Owner</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select an owner" />
@@ -162,9 +225,35 @@ export default function PetForm({ params }: any) {
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save Pet"}
-          </Button>
+          <div className="flex justify-between">
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Pet"}
+            </Button>
+            {isEditing && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={isLoading}>
+                    Delete Pet
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      the pet from the system.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onDelete}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </form>
       </Form>
     </div>
