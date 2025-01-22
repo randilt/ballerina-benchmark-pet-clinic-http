@@ -31,7 +31,7 @@ export const columns: ColumnDef<Vet>[] = [
         <div className="flex">
           <Link href={`/vets/${vet.id}`}>
             <Button variant="outline" size="sm">
-              Manage Vet
+              Update
             </Button>
           </Link>
         </div>
