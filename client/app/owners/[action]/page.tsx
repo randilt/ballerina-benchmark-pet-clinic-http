@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { PageProps } from "@/types";
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -26,10 +27,9 @@ const formSchema = z.object({
   telephone: z.string().min(1, "Telephone is required"),
 });
 
-export default function OwnerForm({ params }: { params: { action: string } }) {
+export default function OwnerForm({ params }: any) {
   const router = useRouter();
-  const resolvedParams = use(params as any);
-  const action = (resolvedParams as { action: string }).action;
+  const action = params.action as string;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 

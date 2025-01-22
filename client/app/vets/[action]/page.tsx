@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { MultiSelect } from "@/components/ui/multi-select";
-import type { Specialty } from "@/types";
+import type { PageProps, Specialty } from "@/types";
 import {
   createVetAction,
   updateVetAction,
@@ -50,10 +50,9 @@ const formSchema = z.object({
     .min(1, "At least one specialty is required"),
 });
 
-export default function VetForm({ params }: { params: { action: string } }) {
+export default function VetForm({ params }: any) {
   const router = useRouter();
-  const resolvedParams = use(params as any);
-  const action = (resolvedParams as { action: string }).action;
+  const action = params.action as string;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [specialties, setSpecialties] = useState([]);

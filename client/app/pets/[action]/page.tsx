@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Owner } from "@/types";
+import { Owner, PageProps } from "@/types";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -35,10 +35,9 @@ const formSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
 });
 
-export default function PetForm({ params }: { params: { action: string } }) {
+export default function PetForm({ params }: any) {
   const router = useRouter();
-  const resolvedParams = use(params as any);
-  const action = (resolvedParams as { action: string }).action;
+  const action = params.action as string;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [owners, setOwners] = useState([]);

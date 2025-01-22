@@ -17,19 +17,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { PageProps } from "@/types";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
 });
 
-export default function SpecialtyForm({
-  params,
-}: {
-  params: { action: string };
-}) {
+export default function SpecialtyForm({ params }: any) {
   const router = useRouter();
-  const resolvedParams = use(params as any);
-  const action = (resolvedParams as { action: string }).action;
+  const action = params.action as string;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
