@@ -1,11 +1,11 @@
 "use client";
 
-import { use, useState } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createPet, updatePet } from "@/lib/api";
+import { createPet, updatePet, getOwners } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,11 +17,19 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Owner } from "@/types";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   species: z.string().min(1, "Species is required"),
-  ownerId: z.number().int().positive("Owner ID must be a positive integer"),
+  ownerId: z.string().min(1, "Owner is required"),
   birthDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
@@ -33,13 +41,22 @@ export default function PetForm({ params }: { params: { action: string } }) {
   const action = (resolvedParams as { action: string }).action;
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [owners, setOwners] = useState([]);
+
+  useEffect(() => {
+    const fetchOwners = async () => {
+      const fetchedOwners = await getOwners();
+      setOwners(fetchedOwners);
+    };
+    fetchOwners();
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       species: "",
-      ownerId: 1,
+      ownerId: "",
       birthDate: "",
     },
   });
@@ -47,14 +64,15 @@ export default function PetForm({ params }: { params: { action: string } }) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
+      const petData = { ...values, ownerId: Number.parseInt(values.ownerId) };
       if (action === "new") {
-        await createPet(values);
+        await createPet(petData);
         toast({
           title: "Pet created successfully",
           description: "The new pet has been added to the system.",
         });
       } else if (action === "edit") {
-        await updatePet(Number.parseInt(action), values);
+        await updatePet(Number.parseInt(action), petData);
         toast({
           title: "Pet updated successfully",
           description: "The pet information has been updated.",
@@ -110,17 +128,24 @@ export default function PetForm({ params }: { params: { action: string } }) {
             name="ownerId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Owner ID</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Owner ID"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(Number.parseInt(e.target.value))
-                    }
-                  />
-                </FormControl>
+                <FormLabel>Owner</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an owner" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {owners.map((owner: Owner) => (
+                      <SelectItem key={owner.id} value={owner.id.toString()}>
+                        {owner.firstName} {owner.lastName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

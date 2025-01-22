@@ -12,6 +12,9 @@ export function Navbar() {
           <Link href="/pets" className="hover:underline">
             Pets
           </Link>
+          <Link href="/owners" className="hover:underline">
+            Owners
+          </Link>
           <Link href="/specialties" className="hover:underline">
             Specialties
           </Link>

@@ -58,3 +58,22 @@ export async function updateVet(id: number, vet: any) {
 export async function deleteVet(id: number) {
   await axios.delete(`${API_URL}/vets/${id}`);
 }
+
+export async function getOwners() {
+  const response = await axios.get(`${API_URL}/owners`);
+  return response.data;
+}
+
+export async function createOwner(owner: any) {
+  const response = await axios.post(`${API_URL}/owners`, owner);
+  return response.data;
+}
+
+export async function updateOwner(id: number, owner: any) {
+  const response = await axios.put(`${API_URL}/owners/${id}`, owner);
+  return response.data;
+}
+
+export async function deleteOwner(id: number) {
+  await axios.delete(`${API_URL}/owners/${id}`);
+}
