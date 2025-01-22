@@ -1,11 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getPets, getSpecialties, getVets } from "@/lib/api";
+import { getOwners, getPets, getSpecialties, getVets } from "@/lib/api";
 
 export default async function Home() {
-  const [pets, specialties, vets] = await Promise.all([
+  const [pets, specialties, vets, owners] = await Promise.all([
     getPets(),
     getSpecialties(),
     getVets(),
+    getOwners(),
   ]);
 
   return (
@@ -34,6 +35,14 @@ export default async function Home() {
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">{vets.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Owners</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{owners.length}</p>
           </CardContent>
         </Card>
       </div>
