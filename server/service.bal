@@ -14,7 +14,7 @@ configurable int port = 8080;
     cors: {
         allowOrigins: ["http://localhost:3000"],
         allowCredentials: false,
-        allowHeaders: ["CORELATION_ID", "Content-Type", "Authorization"],  // Added common headers
+        allowHeaders: ["CORELATION_ID", "Content-Type", "Authorization"],
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         exposeHeaders: ["X-CUSTOM-HEADER"],
         maxAge: 84900
