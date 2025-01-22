@@ -32,7 +32,7 @@ public type RequestValidationError distinct error<record {|
 
 public type ErrorResponse record {|
     int status;
-    string message; // Changed from error? to string
+    string message;
     json details?;
 |};
 

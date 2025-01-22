@@ -74,6 +74,7 @@ service / on new http:Listener(port) {
     }
 
     // pet endpoints
+    // Function to add a new pet
     resource function post pets(@http:Payload types:Pet payload) returns http:Response {
         http:Response response = new;
 
@@ -94,36 +95,104 @@ service / on new http:Listener(port) {
         return response;
     }
 
-    resource function get pets() returns types:Pet[]|error {
-        return self.petRepo.getAll();
-    }
+    // Function to get all pets
+    resource function get pets() returns http:Response {
+        http:Response response = new;
 
-    resource function get pets/[int id]() returns types:Pet|http:NotFound|error {
-        types:Pet|error result = self.petRepo.getById(id);
-        if result is error {
-            return http:NOT_FOUND;
+        do {
+            types:Pet[] result = check self.petRepo.getAll();
+            response.setJsonPayload(result);
+        } on fail error e {
+            types:ErrorResponse errResp = {
+                status: self.getStatusCode(e),
+                message: e.message(),
+                details: <json>e.detail()
+            };
+            response.statusCode = errResp.status;
+            response.setJsonPayload(errResp);
         }
-        return result;
+
+        return response;
     }
 
-    resource function get owners/[int id]/pets() returns types:Pet[]|error {
-        return self.petRepo.getByOwnerId(id);
-    }
+    // Function to get a pet by ID
+    resource function get pets/[int id]() returns http:Response {
+        http:Response response = new;
 
-    resource function put pets/[int id](@http:Payload types:Pet payload) returns types:Pet|http:NotFound|error {
-        types:Pet|error result = self.petRepo.update(id, payload);
-        if result is error {
-            return http:NOT_FOUND;
+        do {
+            types:Pet result = check self.petRepo.getById(id);
+            response.setJsonPayload(result);
+        } on fail error e {
+            types:ErrorResponse errResp = {
+                status: self.getStatusCode(e),
+                message: e.message(),
+                details: <json>e.detail()
+            };
+            response.statusCode = errResp.status;
+            response.setJsonPayload(errResp);
         }
-        return result;
+
+        return response;
     }
 
-    resource function delete pets/[int id]() returns http:Ok|http:NotFound|error {
-        error? result = self.petRepo.delete(id);
-        if result is error {
-            return http:NOT_FOUND;
+    // Function to get all pets by owner ID
+    resource function get owners/[int id]/pets() returns http:Response {
+        http:Response response = new;
+
+        do {
+            types:Pet[] result = check self.petRepo.getByOwnerId(id);
+            response.setJsonPayload(result);
+        } on fail error e {
+            types:ErrorResponse errResp = {
+                status: self.getStatusCode(e),
+                message: e.message(),
+                details: <json>e.detail()
+            };
+            response.statusCode = errResp.status;
+            response.setJsonPayload(errResp);
         }
-        return http:OK;
+
+        return response;
+    }
+
+    // Function to update a pet by ID   
+    resource function put pets/[int id](@http:Payload types:Pet payload) returns http:Response {
+        http:Response response = new;
+
+        do {
+            types:Pet result = check self.petRepo.update(id, payload);
+            response.setJsonPayload(result);
+        } on fail error e {
+            types:ErrorResponse errResp = {
+                status: self.getStatusCode(e),
+                message: e.message(),
+                details: <json>e.detail()
+            };
+            response.statusCode = errResp.status;
+            response.setJsonPayload(errResp);
+        }
+
+        return response;
+    }
+
+    // Function to delete a pet by ID
+    resource function delete pets/[int id]() returns http:Response {
+        http:Response response = new;
+
+        do {
+            check self.petRepo.delete(id);
+            response.statusCode = http:STATUS_NO_CONTENT;
+        } on fail error e {
+            types:ErrorResponse errResp = {
+                status: self.getStatusCode(e),
+                message: e.message(),
+                details: <json>e.detail()
+            };
+            response.statusCode = errResp.status;
+            response.setJsonPayload(errResp);
+        }
+
+        return response;
     }
 
     // visit endpoints
